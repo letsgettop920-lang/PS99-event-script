@@ -1,5 +1,5 @@
 -- ==========================================================
--- -- Custom PS99 Event Hub Framework (Click Button Version)
+-- -- Custom PS99 Event Hub Framework (Fixed Teleport)
 -- ==========================================================
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -92,31 +92,49 @@ Tab:Button({
     end
 })
 
--- -- Button 3: Auto-Join Event (Attempt Action)
+-- -- Button 3: Accurate Auto-Join Event Teleport
 Tab:Button({
     Title = "Auto-Join Active Event",
     Callback = function()
         pcall(function()
-            -- Searches for event teleport or enter remotes/instances in workspace
-            local eventFound = false
-            for _, obj in ipairs(workspace:GetDescendants()) do
-                if obj.Name:lower():find("event") and obj:IsA("Model") then
-                    local primaryPart = obj.PrimaryPart or obj:FindFirstChildWhichIsA("BasePart")
-                    if primaryPart and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-                        LocalPlayer.Character.HumanoidRootPart.CFrame = primaryPart.CFrame
-                        eventFound = true
-                        break
+            local targetPart = nil
+            local things = workspace:FindFirstChild("__THINGS")
+            
+            -- Check inside instance containers where events spawn
+            if things and things:FindFirstChild("__INSTANCE_CONTAINER") then
+                local activeContainer = things.__INSTANCE_CONTAINER:FindFirstChild("Active")
+                if activeContainer then
+                    for _, child in ipairs(activeContainer:GetChildren()) do
+                        -- Look for interactive elements or lobbies inside the active event
+                        local interact = child:FindFirstChild("INTERACT", true)
+                        if interact then
+                            targetPart = interact:FindFirstChildWhichIsA("BasePart") or interact.Parent
+                            break
+                        end
                     end
                 end
             end
             
-            if eventFound then
-                WindUI:Notify({ Title = "Success!", Content = "Attempted teleport to event area.", Duration = 2 })
+            -- Fallback search if instance container isn't populated
+            if not targetPart then
+                for _, obj in ipairs(workspace:GetDescendants()) do
+                    local nameLower = obj.Name:lower()
+                    if (nameLower:find("event") or nameLower:find("lobby")) and obj:IsA("BasePart") and not nameLower:find("sign") then
+                        targetPart = obj
+                        break
+                    end
+                end
+            end
+
+            if targetPart and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                local destCFrame = targetPart:IsA("Model") and targetPart:GetPivot() or targetPart.CFrame
+                LocalPlayer.Character.HumanoidRootPart.CFrame = destCFrame + Vector3.new(0, 3, 0)
+                WindUI:Notify({ Title = "Success!", Content = "Teleported to actual event area.", Duration = 2 })
             else
-                WindUI:Notify({ Title = "Notice", Content = "No active event area found nearby.", Duration = 2 })
+                WindUI:Notify({ Title = "Notice", Content = "Active event instance container not found yet.", Duration = 2 })
             end
         end)
     end
 })
 
-WindUI:Notify({ Title = "Loaded Successfully!", Content = "Button-based script hub is ready.", Duration = 3 })
+WindUI:Notify({ Title = "Loaded Successfully!", Content = "Updated event teleport script is ready.", Duration = 3 })
