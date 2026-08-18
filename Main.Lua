@@ -92,41 +92,42 @@ Tab:Button({
     end
 })
 
--- -- Button 3: Reliable Event Teleport (With Safe Fallback)
+-- -- Button 3: Reliable Event Teleport (Fixed Fallback)
 Tab:Button({
     Title = "Auto-Join Active Event",
     Callback = function()
         pcall(function()
-            local targetCFrame = nil
+            local char = LocalPlayer.Character
+            local rootPart = char and char:FindFirstChild("HumanoidRootPart")
             
-            -- Search workspace for the event model or parts safely
+            if not rootPart then
+                WindUI:Notify({ Title = "Error", Content = "Character not found!", Duration = 2 })
+                return
+            end
+
+            local foundTarget = false
+            
             for _, obj in ipairs(workspace:GetDescendants()) do
                 local nameLower = obj.Name:lower()
-                if (nameLower:find("fiesta") or nameLower:find("event")) and not nameLower:find("sign") and not nameLower:find("text") then
-                    if obj:IsA("Model") then
-                        targetCFrame = obj:GetPivot()
-                        break
-                    elseif obj:IsA("BasePart") then
-                        targetCFrame = obj.CFrame
+                if (nameLower:find("teleport") or nameLower:find("cannon") or nameLower:find("portal") or nameLower:find("event")) 
+                   and (obj:IsA("BasePart") or obj:IsA("Model")) then
+                    
+                    local destCFrame = obj:IsA("Model") and obj:GetPivot() or obj.CFrame
+                    if destCFrame then
+                        rootPart.CFrame = destCFrame + Vector3.new(0, 3, 0)
+                        WindUI:Notify({ Title = "Success!", Content = "Teleported via found portal!", Duration = 2 })
+                        foundTarget = true
                         break
                     end
                 end
             end
 
-            local char = LocalPlayer.Character
-            if targetCFrame and char and char:FindFirstChild("HumanoidRootPart") then
-                char.HumanoidRootPart.CFrame = targetCFrame + Vector3.new(0, 3, 0)
-                WindUI:Notify({ Title = "Success!", Content = "Teleported to the event!", Duration = 2 })
-            else
-                -- Fallback safe zone teleport so it never errors out
-                if char and char:FindFirstChild("HumanoidRootPart") then
-                    char.HumanoidRootPart.CFrame = CFrame.new(125, 10, -340)
-                    WindUI:Notify({ Title = "Notice", Content = "Used fallback event coordinates.", Duration = 2 })
-                end
+            if not foundTarget then
+                rootPart.CFrame = CFrame.new(125, 10, -340)
+                WindUI:Notify({ Title = "Notice", Content = "Teleported to fallback coordinates.", Duration = 2 })
             end
         end)
     end
 })
 
 WindUI:Notify({ Title = "Loaded Successfully!", Content = "All bugs fixed and ready.", Duration = 3 })
-
