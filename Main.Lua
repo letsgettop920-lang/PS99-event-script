@@ -1,5 +1,5 @@
 -- ==========================================================
--- -- Custom PS99 Event Hub Framework (Fixed Teleport)
+-- -- Custom PS99 Event Hub Framework (Fiesta Building Teleport)
 -- ==========================================================
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -92,50 +92,37 @@ Tab:Button({
     end
 })
 
--- -- Button 3: Accurate Auto-Join Event Teleport
+-- -- Button 3: Precise Fiesta Building Teleport
 Tab:Button({
     Title = "Auto-Join Active Event",
     Callback = function()
         pcall(function()
             local targetPart = nil
-            local things = workspace:FindFirstChild("__THINGS")
             
-            -- Check inside instance containers where events spawn
-            if things and things:FindFirstChild("__INSTANCE_CONTAINER") then
-                local activeContainer = things.__INSTANCE_CONTAINER:FindFirstChild("Active")
-                if activeContainer then
-                    for _, child in ipairs(activeContainer:GetChildren()) do
-                        -- Look for interactive elements or lobbies inside the active event
-                        local interact = child:FindFirstChild("INTERACT", true)
-                        if interact then
-                            targetPart = interact:FindFirstChildWhichIsA("BasePart") or interact.Parent
-                            break
-                        end
-                    end
-                end
-            end
-            
-            -- Fallback search if instance container isn't populated
-            if not targetPart then
-                for _, obj in ipairs(workspace:GetDescendants()) do
-                    local nameLower = obj.Name:lower()
-                    if (nameLower:find("event") or nameLower:find("lobby")) and obj:IsA("BasePart") and not nameLower:find("sign") then
+            -- Search specifically for the Fiesta machine or building in the workspace
+            for _, obj in ipairs(workspace:GetDescendants()) do
+                local nameLower = obj.Name:lower()
+                -- Look for "fiesta" or "machine" while avoiding simple text signs
+                jf = nameLower:find("fiesta") or nameLower:find("machine")
+                if jf and (obj:IsA("Model") or obj:IsA("BasePart")) and not nameLower:find("sign") then
+                    if obj:IsA("Model") then
+                        targetPart = obj.PrimaryPart or obj:FindFirstChildWhichIsA("BasePart")
+                    else
                         targetPart = obj
-                        break
                     end
+                    if targetPart then break end
                 end
             end
 
             if targetPart and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
                 local destCFrame = targetPart:IsA("Model") and targetPart:GetPivot() or targetPart.CFrame
-                LocalPlayer.Character.HumanoidRootPart.CFrame = destCFrame + Vector3.new(0, 3, 0)
-                WindUI:Notify({ Title = "Success!", Content = "Teleported to actual event area.", Duration = 2 })
+                LocalPlayer.Character.HumanoidRootPart.CFrame = destCFrame + Vector3.new(0, 3, -5) -- Offset slightly in front of the door
+                WindUI:Notify({ Title = "Success!", Content = "Teleported directly to the Fiesta Event building!", Duration = 2 })
             else
-                WindUI:Notify({ Title = "Notice", Content = "Active event instance container not found yet.", Duration = 2 })
+                WindUI:Notify({ Title = "Notice", Content = "Fiesta building not found yet.", Duration = 2 })
             end
         end)
     end
 })
 
-WindUI:Notify({ Title = "Loaded Successfully!", Content = "Updated event teleport script is ready.", Duration = 3 })
-
+WindUI:Notify({ Title = "Loaded Successfully!", Content = "Fiesta event teleport script ready.", Duration = 3 })
