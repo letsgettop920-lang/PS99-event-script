@@ -1,5 +1,5 @@
 -- ==========================================================
--- -- Custom PS99 Event Hub Framework (Optimized & Lag-Free)
+-- -- Custom PS99 Event Hub Framework (Click Button Version)
 -- ==========================================================
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -16,10 +16,8 @@ if not success or not WindUI then
     return
 end
 
--- Global configuration table (Set to true by default)
+-- Global configuration table
 getgenv().PS99EventConfig = {
-    FastPets = true,
-    FastBreakables = true,
     SpeedMultiplier = 2000
 }
 
@@ -34,19 +32,6 @@ local Window = WindUI:CreateWindow({
 
 local Tab = Window:Tab({ Title = "Event Farming", Icon = "zap" })
 
--- -- Toggles (Default set to true)
-Tab:Toggle({
-    Title = "Enable Ultra-Fast Pets",
-    Default = true,
-    Callback = function(v) getgenv().PS99EventConfig.FastPets = v end
-})
-
-Tab:Toggle({
-    Title = "Enable Fast Breakables (Damage Loop)",
-    Default = true,
-    Callback = function(v) getgenv().PS99EventConfig.FastBreakables = v end
-})
-
 -- -- Slider for Speed
 Tab:Slider({
     Title = "Pet Speed Multiplier",
@@ -54,65 +39,57 @@ Tab:Slider({
     Callback = function(v) getgenv().PS99EventConfig.SpeedMultiplier = v end
 })
 
--- ==========================================================
--- -- Feature 1: Ultra-Fast Pets Loop
--- ==========================================================
-task.spawn(function()
-    while task.wait(0.2) do
-        if getgenv().PS99EventConfig.FastPets then
-            pcall(function()
-                local things = workspace:FindFirstChild("__THINGS")
-                if things and things:FindFirstChild("Pets") then
-                    for _, pet in ipairs(things.Pets:GetChildren()) do
-                        pet:SetAttribute("SpeedMultiplier", getgenv().PS99EventConfig.SpeedMultiplier)
-                        pet:SetAttribute("MoveSpeed", 16 * getgenv().PS99EventConfig.SpeedMultiplier)
-                    end
+-- -- Button 1: Boost Pets Once (Click Action)
+Tab:Button({
+    Title = "Apply Ultra-Fast Pets Boost",
+    Callback = function()
+        pcall(function()
+            local things = workspace:FindFirstChild("__THINGS")
+            if things and things:FindFirstChild("Pets") then
+                for _, pet in ipairs(things.Pets:GetChildren()) do
+                    pet:SetAttribute("SpeedMultiplier", getgenv().PS99EventConfig.SpeedMultiplier)
+                    pet:SetAttribute("MoveSpeed", 16 * getgenv().PS99EventConfig.SpeedMultiplier)
                 end
-            end)
-        end
+                WindUI:Notify({ Title = "Success!", Content = "Pet speed attributes applied.", Duration = 2 })
+            else
+                WindUI:Notify({ Title = "Notice", Content = "Pets folder not found.", Duration = 2 })
+            end
+        end)
     end
-end)
+})
 
--- ==========================================================
--- -- Feature 2: Fast Breakables / Event Farming Loop (Optimized)
--- ==========================================================
--- Cache remote events ONCE so it doesn't lag the game every frame
-local cachedRemotes = {}
-task.spawn(function()
-    pcall(function()
-        for _, remote in ipairs(ReplicatedStorage:GetDescendants()) do
-            if remote:IsA("RemoteEvent") then
-                local nameLower = remote.Name:lower()
-                if string.find(nameLower, "break") or string.find(nameLower, "damage") or string.find(nameLower, "hit") then
-                    table.insert(cachedRemotes, remote)
+-- -- Button 2: Run Damage/Breakables Once (Click Action)
+Tab:Button({
+    Title = "Trigger Fast Breakables (Damage Action)",
+    Callback = function()
+        pcall(function()
+            local cachedRemotes = {}
+            for _, remote in ipairs(ReplicatedStorage:GetDescendants()) do
+                if remote:IsA("RemoteEvent") then
+                    local nameLower = remote.Name:lower()
+                    if string.find(nameLower, "break") or string.find(nameLower, "damage") or string.find(nameLower, "hit") then
+                        table.insert(cachedRemotes, remote)
+                    end
                 end
             end
-        end
-    end)
-end)
 
-task.spawn(function()
-    while task.wait(0.3) do
-        if getgenv().PS99EventConfig.FastBreakables then
-            pcall(function()
-                local things = workspace:FindFirstChild("__THINGS")
-                local breakables = things and things:FindFirstChild("Breakables")
-                
-                if breakables then
-                    for _, breakable in ipairs(breakables:GetChildren()) do
-                        local breakableId = breakable:FindFirstChild("UUID") or breakable.Name
-                        if breakableId then
-                            for _, remote in ipairs(cachedRemotes) do
-                                pcall(function()
-                                    remote:FireServer(breakable.Name)
-                                end)
-                            end
-                        end
+            local things = workspace:FindFirstChild("__THINGS")
+            local breakables = things and things:FindFirstChild("Breakables")
+            
+            if breakables and #cachedRemotes > 0 then
+                for _, breakable in ipairs(breakables:GetChildren()) do
+                    for _, remote in ipairs(cachedRemotes) do
+                        pcall(function()
+                            remote:FireServer(breakable.Name)
+                        end)
                     end
                 end
-            end)
-        end
+                WindUI:Notify({ Title = "Success!", Content = "Fired breakables remote actions.", Duration = 2 })
+            else
+                WindUI:Notify({ Title = "Notice", Content = "No breakables or remotes found.", Duration = 2 })
+            end
+        end)
     end
-end)
+})
 
-WindUI:Notify({ Title = "Loaded Successfully!", Content = "Your optimized script hub is ready and active.", Duration = 3 })
+WindUI:Notify({ Title = "Loaded Successfully!", Content = "Button-based script hub is ready.", Duration = 3 })
