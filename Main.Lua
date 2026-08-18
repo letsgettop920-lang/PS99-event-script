@@ -36,7 +36,7 @@ local Tab = Window:Tab({ Title = "Event Farming", Icon = "zap" })
 -- -- Slider for Speed Configuration
 Tab:Slider({
     Title = "Pet Speed Multiplier",
-    Value = { Min = 100, Max = 5000, Default = getgenv().config.speedMultiplier },
+    Value = { Min = 100, Max = 6000, Default = getgenv().config.speedMultiplier },
     Callback = function(v) 
         getgenv().config.speedMultiplier = v 
     end
