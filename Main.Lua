@@ -16,10 +16,10 @@ if not success or not WindUI then
     return 
 end
 
--- Global configuration table
+-- Global configuration table (Set to true by default)
 getgenv().PS99EventConfig = {
-    FastPets = false,
-    FastBreakables = false,
+    FastPets = true,
+    FastBreakables = true,
     PetSpeedMultiplier = 2000
 }
 
@@ -34,16 +34,16 @@ local Window = WindUI:CreateWindow({
 
 local Tab = Window:Tab({ Title = "Event Farming", Icon = "zap" })
 
--- Toggles
+-- Toggles (Default set to true)
 Tab:Toggle({
     Title = "Enable Ultra-Fast Pets",
-    Default = false,
+    Default = true,
     Callback = function(v) getgenv().PS99EventConfig.FastPets = v end
 })
 
 Tab:Toggle({
     Title = "Enable Fast Breakables (Damage Loop)",
-    Default = false,
+    Default = true,
     Callback = function(v) getgenv().PS99EventConfig.FastBreakables = v end
 })
 
@@ -104,4 +104,4 @@ task.spawn(function()
     end
 end)
 
-WindUI:Notify({ Title = "Loaded Successfully!", Content = "Your custom script hub is ready.", Duration = 3 })
+WindUI:Notify({ Title = "Loaded Successfully!", Content = "Your custom script hub is ready and active.", Duration = 3 })
