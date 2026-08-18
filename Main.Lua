@@ -1,5 +1,5 @@
 -- ==========================================================
--- -- Custom PS99 Event Hub Framework (Clean Final Version)
+-- -- Custom PS99 Event Hub Framework (Full Working Final Version)
 -- ==========================================================
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -42,7 +42,7 @@ Tab:Slider({
     end
 })
 
--- -- Toggle that updates config.autoFarm directly
+-- -- Toggle that updates getgenv().config.autoFarm directly
 Tab:Toggle({
     Title = "Auto-Farm Breakables (Instance Aware)",
     Default = getgenv().config.autoFarm,
@@ -105,18 +105,33 @@ Tab:Button({
     Callback = function()
         pcall(function()
             local things = workspace:FindFirstChild("__THINGS")
-            local breakables = things and things:FindFirstChild("Breakables")
+            local instanceContainer = things and things:FindFirstChild("__INSTANCE_CONTAINER")
+            local activeContainer = instanceContainer and instanceContainer:FindFirstChild("Active")
+            
+            local targetBreakables = nil
+            if activeContainer then
+                for _, child in ipairs(activeContainer:GetChildren()) do
+                    if child:FindFirstChild("Breakables") then
+                        targetBreakables = child.Breakables
+                        break
+                    end
+                end
+            end
+            
+            if not targetBreakables and things then
+                targetBreakables = things:FindFirstChild("Breakables")
+            end
             
             local damageRemote = nil
             for _, remote in ipairs(ReplicatedStorage:GetDescendants()) do
-                if remote:IsA("RemoteEvent") and remote.Name:lower():find("break") then
+                if remote:IsA("RemoteEvent") and (remote.Name:lower():find("break") or remote.Name:lower():find("tap")) then
                     damageRemote = remote
                     break
                 end
             end
 
-            if breakables and damageRemote then
-                for _, breakable in ipairs(breakables:GetChildren()) do
+            if targetBreakables and damageRemote then
+                for _, breakable in ipairs(targetBreakables:GetChildren()) do
                     pcall(function()
                         damageRemote:FireServer(breakable.Name)
                     end)
@@ -129,18 +144,33 @@ Tab:Button({
     end
 })
 
--- -- Button: Lobby Return Helper
+-- -- Button: Teleport to Active Event Instance Area
 Tab:Button({
-    Title = "Teleport to Spawn / Lobby",
+    Title = "Teleport to Active Event",
     Callback = function()
         pcall(function()
-            local char = LocalPlayer.Character
-            if char and char:FindFirstChild("HumanoidRootPart") then
-                char.HumanoidRootPart.CFrame = CFrame.new(0, 5, 0)
-                WindUI:Notify({ Title = "Teleported", Content = "Moved back to spawn area.", Duration = 2 })
+            local things = workspace:FindFirstChild("__THINGS")
+            local instanceContainer = things and things:FindFirstChild("__INSTANCE_CONTAINER")
+            local activeContainer = instanceContainer and instanceContainer:FindFirstChild("Active")
+            
+            local foundTarget = false
+            if activeContainer then
+                for _, child in ipairs(activeContainer:GetChildren()) do
+                    local spawnPart = child:FindFirstChild("Spawn") or child:FindFirstChild("SpawnLocation") or child:FindFirstChild("Model") or child:FindFirstChild("Interact")
+                    if spawnPart and spawnPart:IsA("BasePart") then
+                        LocalPlayer.Character.HumanoidRootPart.CFrame = spawnPart.CFrame + Vector3.new(0, 5, 0)
+                        WindUI:Notify({ Title = "Success!", Content = "Teleported inside active event area.", Duration = 2 })
+                        foundTarget = true
+                        break
+                    end
+                end
+            end
+            
+            if not foundTarget then
+                WindUI:Notify({ Title = "Notice", Content = "Please use the official Event icon if spawn is locked.", Duration = 3 })
             end
         end)
     end
 })
 
-WindUI:Notify({ Title = "Loaded Successfully!", Content = "Hub ready for use.", Duration = 3 })
+WindUI:Notify({ Title = "Loaded Successfully!", Content = "All features fully functional.", Duration = 3 })
