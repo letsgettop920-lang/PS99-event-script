@@ -1,5 +1,5 @@
 -- ==========================================================
--- -- Custom PS99 Event Hub Framework (Fully Fixed & Clean)
+-- -- Custom PS99 Event Hub Framework (Native Teleport Integrated)
 -- ==========================================================
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -92,42 +92,30 @@ Tab:Button({
     end
 })
 
--- -- Button 3: Reliable Event Teleport (Direct Fallback)
+-- -- Button 3: Native Game Teleport Handler
 Tab:Button({
     Title = "Auto-Join Active Event",
     Callback = function()
         pcall(function()
-            local char = LocalPlayer.Character
-            local rootPart = char and char:FindFirstChild("HumanoidRootPart")
+            -- Option A: Try to invoke the game's native event menu/teleport module if loaded
+            local successClient, Client = pcall(function()
+                return require(ReplicatedStorage:WaitForChild("Client", 2))
+            end)
             
-            if not rootPart then
-                WindUI:Notify({ Title = "Error", Content = "Character not found!", Duration = 2 })
-                return
-            end
-
-            local foundTarget = false
-            
-            for _, obj in ipairs(workspace:GetDescendants()) do
-                local nameLower = obj.Name:lower()
-                if (nameLower:find("teleport") or nameLower:find("cannon") or nameLower:find("portal") or nameLower:find("event")) 
-                   and (obj:IsA("BasePart") or obj:IsA("Model")) then
-                    
-                    local destCFrame = obj:IsA("Model") and obj:GetPivot() or obj.CFrame
-                    if destCFrame then
-                        rootPart.CFrame = destCFrame + Vector3.new(0, 3, 0)
-                        WindUI:Notify({ Title = "Success!", Content = "Teleported via found portal!", Duration = 2 })
-                        foundTarget = true
-                        break
-                    end
+            if successClient and Client and Client.Network and Client.Network.Invoke then
+                local successInvoke = pcall(function()
+                    Client.Network.Invoke("TeleportToEvent")
+                end)
+                if successInvoke then
+                    WindUI:Notify({ Title = "Success!", Content = "Triggered event network teleport!", Duration = 2 })
+                    return
                 end
             end
 
-            if not foundTarget then
-                rootPart.CFrame = CFrame.new(125, 10, -340)
-                WindUI:Notify({ Title = "Notice", Content = "Teleported to event coordinates.", Duration = 2 })
-            end
+            -- Option B: Fallback notice for native UI element
+            WindUI:Notify({ Title = "PS99 Notice", Content = "Please use the official Event icon on your screen!", Duration = 3 })
         end)
     end
 })
 
-WindUI:Notify({ Title = "Loaded Successfully!", Content = "Script ready without bugs.", Duration = 3 })
+WindUI:Notify({ Title = "Loaded Successfully!", Content = "Native Teleport script ready.", Duration = 3 })
