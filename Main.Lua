@@ -1,5 +1,5 @@
 -- ==========================================================
--- -- Custom PS99 Event Hub Framework (Fiesta Building Teleport)
+-- -- Custom PS99 Event Hub Framework (Fixed Fiesta Teleport)
 -- ==========================================================
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -102,8 +102,7 @@ Tab:Button({
             -- Search specifically for the Fiesta machine or building in the workspace
             for _, obj in ipairs(workspace:GetDescendants()) do
                 local nameLower = obj.Name:lower()
-                -- Look for "fiesta" or "machine" while avoiding simple text signs
-                jf = nameLower:find("fiesta") or nameLower:find("machine")
+                local jf = nameLower:find("fiesta") or nameLower:find("machine")
                 if jf and (obj:IsA("Model") or obj:IsA("BasePart")) and not nameLower:find("sign") then
                     if obj:IsA("Model") then
                         targetPart = obj.PrimaryPart or obj:FindFirstChildWhichIsA("BasePart")
@@ -116,7 +115,7 @@ Tab:Button({
 
             if targetPart and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
                 local destCFrame = targetPart:IsA("Model") and targetPart:GetPivot() or targetPart.CFrame
-                LocalPlayer.Character.HumanoidRootPart.CFrame = destCFrame + Vector3.new(0, 3, -5) -- Offset slightly in front of the door
+                LocalPlayer.Character.HumanoidRootPart.CFrame = destCFrame + Vector3.new(0, 3, -5)
                 WindUI:Notify({ Title = "Success!", Content = "Teleported directly to the Fiesta Event building!", Duration = 2 })
             else
                 WindUI:Notify({ Title = "Notice", Content = "Fiesta building not found yet.", Duration = 2 })
@@ -126,4 +125,3 @@ Tab:Button({
 })
 
 WindUI:Notify({ Title = "Loaded Successfully!", Content = "Fiesta event teleport script ready.", Duration = 3 })
-
