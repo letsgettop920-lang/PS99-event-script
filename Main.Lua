@@ -126,3 +126,4 @@ Tab:Button({
 })
 
 WindUI:Notify({ Title = "Loaded Successfully!", Content = "Fiesta event teleport script ready.", Duration = 3 })
+
