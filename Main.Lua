@@ -1,5 +1,5 @@
 -- ==========================================================
--- -- Custom PS99 Event Hub Framework (Fully Fixed & Error-Free)
+-- -- Custom PS99 Event Hub Framework (Fully Fixed & Clean)
 -- ==========================================================
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -92,7 +92,7 @@ Tab:Button({
     end
 })
 
--- -- Button 3: Reliable Event Teleport (Fixed Fallback)
+-- -- Button 3: Reliable Event Teleport (Direct Fallback)
 Tab:Button({
     Title = "Auto-Join Active Event",
     Callback = function()
@@ -124,10 +124,10 @@ Tab:Button({
 
             if not foundTarget then
                 rootPart.CFrame = CFrame.new(125, 10, -340)
-                WindUI:Notify({ Title = "Notice", Content = "Teleported to fallback coordinates.", Duration = 2 })
+                WindUI:Notify({ Title = "Notice", Content = "Teleported to event coordinates.", Duration = 2 })
             end
         end)
     end
 })
 
-WindUI:Notify({ Title = "Loaded Successfully!", Content = "All bugs fixed and ready.", Duration = 3 })
+WindUI:Notify({ Title = "Loaded Successfully!", Content = "Script ready without bugs.", Duration = 3 })
