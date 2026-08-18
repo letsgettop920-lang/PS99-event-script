@@ -80,17 +80,14 @@ task.spawn(function()
     while task.wait(0.1) do
         if getgenv().PS99EventConfig.FastBreakables then
             pcall(function()
-                -- Look for network remotes or event breakables container
                 local things = workspace:FindFirstChild("__THINGS")
                 local breakables = things and things:FindFirstChild("Breakables")
                 
                 if breakables then
-                    -- Find network damage/break remote events if your game version utilizes them
                     for _, remote in ipairs(ReplicatedStorage:GetDescendants()) do
                         if remote:IsA("RemoteEvent") and (string.find(remote.Name:lower(), "break") or string.find(remote.Name:lower(), "damage") or string.find(remote.Name:lower(), "hit")) then
                             for _, breakable in ipairs(breakables:GetChildren()) do
                                 if breakable:FindFirstChild("UUID") or breakable.Name then
-                                    -- Fire damage request to simulate rapid hitting
                                     pcall(function()
                                         remote:FireServer(breakable.Name)
                                     end)
