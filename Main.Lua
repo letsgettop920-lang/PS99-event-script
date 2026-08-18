@@ -39,7 +39,7 @@ Tab:Slider({
     Callback = function(v) getgenv().PS99EventConfig.SpeedMultiplier = v end
 })
 
--- -- Button 1: Boost Pets Once (Click Action)
+-- -- Button 1: Boost Pets Once
 Tab:Button({
     Title = "Apply Ultra-Fast Pets Boost",
     Callback = function()
@@ -58,7 +58,7 @@ Tab:Button({
     end
 })
 
--- -- Button 2: Run Damage/Breakables Once (Click Action)
+-- -- Button 2: Run Damage/Breakables Once
 Tab:Button({
     Title = "Trigger Fast Breakables (Damage Action)",
     Callback = function()
@@ -87,6 +87,33 @@ Tab:Button({
                 WindUI:Notify({ Title = "Success!", Content = "Fired breakables remote actions.", Duration = 2 })
             else
                 WindUI:Notify({ Title = "Notice", Content = "No breakables or remotes found.", Duration = 2 })
+            end
+        end)
+    end
+})
+
+-- -- Button 3: Auto-Join Event (Attempt Action)
+Tab:Button({
+    Title = "Auto-Join Active Event",
+    Callback = function()
+        pcall(function()
+            -- Searches for event teleport or enter remotes/instances in workspace
+            local eventFound = false
+            for _, obj in ipairs(workspace:GetDescendants()) do
+                if obj.Name:lower():find("event") and obj:IsA("Model") then
+                    local primaryPart = obj.PrimaryPart or obj:FindFirstChildWhichIsA("BasePart")
+                    if primaryPart and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                        LocalPlayer.Character.HumanoidRootPart.CFrame = primaryPart.CFrame
+                        eventFound = true
+                        break
+                    end
+                end
+            end
+            
+            if eventFound then
+                WindUI:Notify({ Title = "Success!", Content = "Attempted teleport to event area.", Duration = 2 })
+            else
+                WindUI:Notify({ Title = "Notice", Content = "No active event area found nearby.", Duration = 2 })
             end
         end)
     end
