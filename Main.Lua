@@ -1,5 +1,5 @@
 -- ==========================================================
--- -- Custom PS99 Event Hub Framework (All Fixes Applied)
+-- -- Custom PS99 Event Hub Framework (Updated Config)
 -- ==========================================================
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -16,9 +16,10 @@ if not success or not WindUI then
     return
 end
 
--- Global configuration table
-getgenv().PS99EventConfig = {
-    SpeedMultiplier = 2000
+-- 2. Your requested Configuration Table structure
+getgenv().config = {
+    autoFarm = false,
+    speedMultiplier = 2000
 }
 
 -- -- Create UI Window
@@ -32,108 +33,113 @@ local Window = WindUI:CreateWindow({
 
 local Tab = Window:Tab({ Title = "Event Farming", Icon = "zap" })
 
--- -- Slider for Speed
+-- -- Slider for Speed Configuration
 Tab:Slider({
     Title = "Pet Speed Multiplier",
-    Value = { Min = 100, Max = 5000, Default = 2000 },
-    Callback = function(v) getgenv().PS99EventConfig.SpeedMultiplier = v end
+    Value = { Min = 100, Max = 5000, Default = getgenv().config.speedMultiplier },
+    Callback = function(v) 
+        getgenv().config.speedMultiplier = v 
+    end
 })
 
--- -- Button 1: Continuous Ultra-Fast Pets Boost (Fixed Loop)
-Tab:Button({
-    Title = "Apply Ultra-Fast Pets Boost",
-    Callback = function()
-        pcall(function()
-            getgenv().PS99FastPets = true
+-- -- Toggle that updates getgenv().config.autoFarm directly
+Tab:Toggle({
+    Title = "Auto-Farm Breakables (Instance Aware)",
+    Default = getgenv().config.autoFarm,
+    Callback = function(state)
+        -- Update your config table value instantly when toggled
+        getgenv().config.autoFarm = state
+        
+        if state then
+            WindUI:Notify({ Title = "Auto-Farm", Content = "config.autoFarm is now TRUE. Loop started!", Duration = 2 })
             
+            -- Functional background loop that monitors config.autoFarm
             task.spawn(function()
-                while getgenv().PS99FastPets do
+                while getgenv().config.autoFarm do
                     pcall(function()
+                        -- Find active instance container (Event rooms / mazes)
                         local things = workspace:FindFirstChild("__THINGS")
-                        if things and things:FindFirstChild("Pets") then
-                            for _, pet in ipairs(things.Pets:GetChildren()) do
-                                pet:SetAttribute("SpeedMultiplier", getgenv().PS99EventConfig.SpeedMultiplier)
-                                pet:SetAttribute("MoveSpeed", 16 * getgenv().PS99EventConfig.SpeedMultiplier)
-                                
-                                local primaryPart = pet:IsA("Model") and pet.PrimaryPart or pet:FindFirstChild("HumanoidRootPart")
-                                if primaryPart and primaryPart:IsA("BasePart") then
-                                    local bv = primaryPart:FindFirstChild("BodyVelocityPS99")
-                                    if not bv then
-                                        bv = Instance.new("BodyVelocity")
-                                        bv.Name = "BodyVelocityPS99"
-                                        bv.MaxForce = Vector3.new(50000, 0, 50000)
-                                        bv.Parent = primaryPart
-                                    end
-                                    bv.Velocity = primaryPart.CFrame.LookVector * (getgenv().PS99EventConfig.SpeedMultiplier / 20)
+                        local instanceContainer = things and things:FindFirstChild("__INSTANCE_CONTAINER")
+                        local activeContainer = instanceContainer and instanceContainer:FindFirstChild("Active")
+                        
+                        local targetBreakables = nil
+                        if activeContainer then
+                            for _, child in ipairs(activeContainer:GetChildren()) do
+                                if child:FindFirstChild("Breakables") then
+                                    targetBreakables = child.Breakables
+                                    break
                                 end
                             end
                         end
+                        
+                        if not targetBreakables and things then
+                            targetBreakables = things:FindFirstChild("Breakables")
+                        end
+
+                        -- Locate active damage/break remote
+                        local damageRemote = nil
+                        for _, remote in ipairs(ReplicatedStorage:GetDescendants()) do
+                            if remote:IsA("RemoteEvent") and (remote.Name:lower():find("break") or remote.Name:lower():find("tap")) then
+                                damageRemote = remote
+                                break
+                            end
+                        end
+
+                        -- Fire remote action if target and remote exist
+                        if targetBreakables and damageRemote then
+                            for _, breakable in ipairs(targetBreakables:GetChildren()) do
+                                if not getgenv().config.autoFarm then break end
+                                pcall(function()
+                                    damageRemote:FireServer(breakable.Name)
+                                end)
+                            end
+                        end
                     end)
-                    task.wait(0.2)
+                    task.wait(0.5) -- Loop cooldown interval
                 end
             end)
-
-            WindUI:Notify({ Title = "Success!", Content = "Continuous pet speed loop active.", Duration = 2 })
-        end)
+        else
+            WindUI:Notify({ Title = "Auto-Farm", Content = "config.autoFarm is now FALSE. Loop stopped.", Duration = 2 })
+        end
     end
 })
 
--- -- Button 2: Run Damage/Breakables Once
+-- -- Button: One-Time Manual Action
 Tab:Button({
-    Title = "Trigger Fast Breakables (Damage Action)",
+    Title = "Trigger Manual Breakables Once",
     Callback = function()
         pcall(function()
-            local cachedRemotes = {}
-            for _, remote in ipairs(ReplicatedStorage:GetDescendants()) do
-                if remote:IsA("RemoteEvent") then
-                    local nameLower = remote.Name:lower()
-                    if string.find(nameLower, "break") or string.find(nameLower, "damage") or string.find(nameLower, "hit") then
-                        table.insert(cachedRemotes, remote)
-                    end
-                end
-            end
-
             local things = workspace:FindFirstChild("__THINGS")
             local breakables = things and things:FindFirstChild("Breakables")
             
-            if breakables and #cachedRemotes > 0 then
-                for _, breakable in ipairs(breakables:GetChildren()) do
-                    for _, remote in ipairs(cachedRemotes) do
-                        pcall(function()
-                            remote:FireServer(breakable.Name)
-                        end)
-                    end
+            local damageRemote = nil
+            for _, remote in ipairs(ReplicatedStorage:GetDescendants()) do
+                if remote:IsA("RemoteEvent") and remote.Name:lower():find("break") then
+                    damageRemote = remote
+                    break
                 end
-                WindUI:Notify({ Title = "Success!", Content = "Fired breakables remote actions.", Duration = 2 })
+            end
+
+            if breakables and damageRemote then
+                for _, breakable in ipairs(breakables:GetChildren()) do
+                    pcall(function()
+                        damageRemote:FireServer(breakable.Name)
+                    end)
+                end
+                WindUI:Notify({ Title = "Success!", Content = "Fired breakables manually.", Duration = 2 })
             else
-                WindUI:Notify({ Title = "Notice", Content = "No breakables or remotes found.", Duration = 2 })
+                WindUI:Notify({ Title = "Notice", Content = "No breakables found to target.", Duration = 2 })
             end
         end)
     end
 })
 
--- -- Button 3: Native Game Teleport Handler (No Glitchy Fallback)
+-- -- Button: Native Event Notice
 Tab:Button({
     Title = "Auto-Join Active Event",
     Callback = function()
-        pcall(function()
-            local successClient, Client = pcall(function()
-                return require(ReplicatedStorage:WaitForChild("Client", 2))
-            end)
-            
-            if successClient and Client and Client.Network and Client.Network.Invoke then
-                local successInvoke = pcall(function()
-                    Client.Network.Invoke("TeleportToEvent")
-                end)
-                if successInvoke then
-                    WindUI:Notify({ Title = "Success!", Content = "Triggered event network teleport!", Duration = 2 })
-                    return
-                end
-            end
-
-            WindUI:Notify({ Title = "PS99 Notice", Content = "Please use the official Event icon on your screen!", Duration = 3 })
-        end)
+        WindUI:Notify({ Title = "PS99 Notice", Content = "Please use the official Event icon on your screen!", Duration = 3 })
     end
 })
 
-WindUI:Notify({ Title = "Loaded Successfully!", Content = "All bugs fully fixed.", Duration = 3 })
+WindUI:Notify({ Title = "Loaded Successfully!", Content = "Config linked to toggles.", Duration = 3 })
