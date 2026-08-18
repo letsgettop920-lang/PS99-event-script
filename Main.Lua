@@ -1,5 +1,5 @@
 -- ==========================================================
--- -- Custom PS99 Event Hub Framework (Fixed Fiesta Teleport)
+-- -- Custom PS99 Event Hub Framework (Accurate Door Teleport)
 -- ==========================================================
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -92,20 +92,26 @@ Tab:Button({
     end
 })
 
--- -- Button 3: Precise Fiesta Building Teleport
+-- -- Button 3: Precise Fiesta Door Teleport
 Tab:Button({
     Title = "Auto-Join Active Event",
     Callback = function()
         pcall(function()
             local targetPart = nil
             
-            -- Search specifically for the Fiesta machine or building in the workspace
+            -- Search workspace for the Fiesta building, avoiding signs
             for _, obj in ipairs(workspace:GetDescendants()) do
                 local nameLower = obj.Name:lower()
-                local jf = nameLower:find("fiesta") or nameLower:find("machine")
-                if jf and (obj:IsA("Model") or obj:IsA("BasePart")) and not nameLower:find("sign") then
+                local jf = nameLower:find("fiesta")
+                if jf and (obj:IsA("Model") or obj:IsA("BasePart")) and not nameLower:find("sign") and not nameLower:find("text") then
                     if obj:IsA("Model") then
-                        targetPart = obj.PrimaryPart or obj:FindFirstChildWhichIsA("BasePart")
+                        -- Try to find a door or entrance part inside the model first
+                        local door = obj:FindFirstChild("Door", true) or obj:FindFirstChild("Entrance", true)
+                        if door and door:IsA("BasePart") then
+                            targetPart = door
+                        else
+                            targetPart = obj.PrimaryPart or obj:FindFirstChildWhichIsA("BasePart")
+                        end
                     else
                         targetPart = obj
                     end
@@ -115,13 +121,13 @@ Tab:Button({
 
             if targetPart and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
                 local destCFrame = targetPart:IsA("Model") and targetPart:GetPivot() or targetPart.CFrame
-                LocalPlayer.Character.HumanoidRootPart.CFrame = destCFrame + Vector3.new(0, 3, -5)
-                WindUI:Notify({ Title = "Success!", Content = "Teleported directly to the Fiesta Event building!", Duration = 2 })
+                LocalPlayer.Character.HumanoidRootPart.CFrame = destCFrame + Vector3.new(0, 3, -4)
+                WindUI:Notify({ Title = "Success!", Content = "Teleported to the Fiesta door!", Duration = 2 })
             else
-                WindUI:Notify({ Title = "Notice", Content = "Fiesta building not found yet.", Duration = 2 })
+                WindUI:Notify({ Title = "Notice", Content = "Fiesta door not found.", Duration = 2 })
             end
         end)
     end
 })
 
-WindUI:Notify({ Title = "Loaded Successfully!", Content = "Fiesta event teleport script ready.", Duration = 3 })
+WindUI:Notify({ Title = "Loaded Successfully!", Content = "Fiesta door teleport script ready.", Duration = 3 })
