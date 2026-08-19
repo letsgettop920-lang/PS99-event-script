@@ -1,7 +1,3 @@
--- ==========================================================
--- -- Custom PS99 Event Hub Framework (Full Working Final Version)
--- ==========================================================
-
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
@@ -22,7 +18,7 @@ getgenv().config = {
     speedMultiplier = 2000
 }
 
--- -- Create UI Window
+-- Create UI Window
 local Window = WindUI:CreateWindow({
     Title = "My Custom PS99 Event Hub",
     Author = "Developer",
@@ -33,7 +29,7 @@ local Window = WindUI:CreateWindow({
 
 local Tab = Window:Tab({ Title = "Event Farming", Icon = "zap" })
 
--- -- Slider for Speed Configuration
+-- Slider for Speed Configuration
 Tab:Slider({
     Title = "Pet Speed Multiplier",
     Value = { Min = 100, Max = 5000, Default = getgenv().config.speedMultiplier },
@@ -42,7 +38,7 @@ Tab:Slider({
     end
 })
 
--- -- Toggle that updates getgenv().config.autoFarm directly
+-- Toggle that updates getgenv().config.autoFarm directly
 Tab:Toggle({
     Title = "Auto-Farm Breakables (Instance Aware)",
     Default = getgenv().config.autoFarm,
@@ -99,7 +95,7 @@ Tab:Toggle({
     end
 })
 
--- -- Button: One-Time Manual Action
+-- Button: One-Time Manual Action
 Tab:Button({
     Title = "Trigger Manual Breakables Once",
     Callback = function()
@@ -144,7 +140,7 @@ Tab:Button({
     end
 })
 
--- -- Button: Teleport to Active Event Instance Area
+-- Button: Teleport to Active Event Instance Area
 Tab:Button({
     Title = "Teleport to Active Event",
     Callback = function()
@@ -174,4 +170,3 @@ Tab:Button({
 })
 
 WindUI:Notify({ Title = "Loaded Successfully!", Content = "All features fully functional.", Duration = 3 })
-
